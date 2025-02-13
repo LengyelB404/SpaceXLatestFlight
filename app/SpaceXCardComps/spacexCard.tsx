@@ -20,17 +20,16 @@ export default function SpaceXCard(){
 
     console.log(dataInfo)
     if (dataInfo) {
-      const localDate = Date.parse(dataInfo.date_local)
-      const formattedDate = format(localDate, 'yyyy-MM-dd HH:mm:ss');
+      
       let link:string = dataInfo.links.reddit.launch
       return (
-        <div className="grid grid-cols-2 gap-3 bg-slate-600 rounded p-3 font-[family-name:var(--font-geist-sans)]">
+        <div className="grid grid-cols-2 gap-3 justify-items-stretch max-w-fit bg-slate-600 rounded p-3 font-[family-name:var(--font-geist-sans)]">
           <div className="bg-yellow-500 p-2 rounded"><small className="font-2xl font-medium text-black bg-yellow-400 w-min pl-2 pr-2 pt-1 pb-1 rounded">Flight_number</small> <br/> <p className="font-bold text-2xl ">{dataInfo.flight_number}</p></div>
-          <div className="bg-fuchsia-600 font-medium p-2 rounded break-keep"> <small className="font-2xl text-black bg-fuchsia-500 w-min pl-2 pr-2 pt-1 pb-1 rounded">Local_Time</small> <br/>{formattedDate}</div>
-          <div className="bg-slate-500 p-2 rounded break-keep"><a href={dataInfo.links.wikipedia}><img src={dataInfo.links.patch.small} alt={dataInfo.name} className="object-cover"></img></a></div>
-          <div className="bg-slate-500 p-2 rounded break-keep text-center"><ul className="mt-2"></ul></div>
-          <div className="bg-slate-500 p-2 rounded break-keep">{formattedDate}</div>
-          <div className="bg-slate-500 p-2 rounded break-keep">{formattedDate}</div>
+          <div className="bg-fuchsia-600 font-medium p-2 rounded break-keep"><Time upcoming={dataInfo.upcoming} launchTime={dataInfo.date_local} /></div>
+          <IsSuccess success={dataInfo.success as boolean}/>
+          <IsUpcoming upcoming={dataInfo.upcoming as boolean} />
+          <div className="p-2 rounded break-keep"><a href={dataInfo.links.wikipedia}><img src={dataInfo.links.patch.small} alt={dataInfo.name} className="object-cover"></img></a></div>
+          <div className="p-2 rounded break-keep"><RedditListElement link={dataInfo.links.reddit.launch}/></div>
         </div>
       )  
     }else{
@@ -55,14 +54,87 @@ function Spinner(){
   )
 }
 
-function RedditListElement(data:any){
+type RedditProps = {
+  link: string;
+};
+
+function RedditListElement(link:RedditProps){
   
-  if (data) {
+  if (link) {
     //const u = stringify(url).replace("url=","")
-    console.log(data)
-    return <li><a href={data.links.reddit.launch} className="object-cover"><img src="https://redditinc.com/hs-fs/hubfs/Reddit%20Inc/Brand/Reddit_Logo.png?width=800&height=800&name=Reddit_Logo.png"></img></a></li>
+    return <a href={link.link} ><img className="w-60" src="https://redditinc.com/hs-fs/hubfs/Reddit%20Inc/Brand/Reddit_Logo.png?width=800&height=800&name=Reddit_Logo.png"></img></a>
   }
   else{
     return <></>
   }
 }
+
+type IsSuccessPorps = {
+  success: boolean;
+};
+
+const IsSuccess =(props:IsSuccessPorps) =>{
+  if (props.success) {
+    return(<div className="p-2 bg-emerald-500 rounded break-keep"><div className="text-center">Launch successfull</div></div>)
+  }else{
+    return(<div className="p-2 bg-rose-500 rounded break-keep"><div className="text-center">Fail</div></div>)
+  }
+}
+
+type IsUpcomingProps = {
+  upcoming: boolean;
+};
+
+const IsUpcoming =(props:IsUpcomingProps) =>{
+  if (props.upcoming) {
+    return(<div className="bg-sky-500 p-2 rounded text-center break-keep">Upcoming</div>)
+  }else{
+    return(<div className="bg-teal-600 p-2 rounded text-center break-keep">Launched</div>)
+  }
+}
+
+type TimeProps = {
+  upcoming: boolean;
+  launchTime:string
+};
+
+const Time = (props:TimeProps) =>{
+
+  if (!props.launchTime) {
+    return<></>
+  }
+  const localDate = format(props.launchTime, 'yyyy-MM-dd HH:mm:ss');
+
+  if (props.upcoming) {
+    if (!props.launchTime) {
+      return<></>
+    }
+    const differenceInMilliseconds =Date.parse(props.launchTime)- Date.now()
+    const differenceInSeconds = differenceInMilliseconds / 1000;
+    const differenceInMinutes = differenceInSeconds / 60;
+    const differenceInHours = differenceInMinutes / 60;
+    const differenceInDays = differenceInHours / 24;
+    var time = ""
+    if (differenceInDays>=1) {
+      time = "Days: "+Math.round(differenceInDays)
+    }else if(differenceInHours>=1){
+      time = "Hours: "+Math.round(differenceInHours)
+    }else if(differenceInMinutes>=1){
+      time = "Minutes: "+Math.round(differenceInMinutes)
+    }
+
+    
+    return (
+      <div>
+         <small className="font-2xl text-black bg-fuchsia-500 w-min pl-2 pr-2 pt-1 pb-1 rounded">Time till launch</small> <br/>{time}
+      </div>
+    )
+  }else{
+    return (
+      <div>
+         <small className="font-2xl text-black bg-fuchsia-500 w-min pl-2 pr-2 pt-1 pb-1 rounded">Launched At</small> <br/>{localDate}
+      </div>
+    )
+  }
+}
+
